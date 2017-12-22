@@ -3,6 +3,8 @@
 #include <gl\GL.h>
 #include <gl\GLU.h>
 #include "glut.h"
+
+
 GLRender::GLRender(void)
 {
 	x = y = 0;
@@ -17,10 +19,57 @@ GLRender::GLRender(void)
 	gornjiDeoX = -60;
 
 	glavaX = glavaY = 0;
+
+	parts = 10;
 }
 
 GLRender::~GLRender(void)
 {
+}
+
+void DrawTiles(int a, int b, int parts)
+{
+	double dx, dy;
+
+	dx = a / parts;
+	dy = b / parts;
+
+	glNormal3f(.0, .0, 1.0);
+	glBegin(GL_QUADS);
+	for (int i = 0; i < parts; i++)
+	{
+		for (int j = 0; j < parts; j++)
+		{
+			glVertex2f(j*dx, i*dy);
+			glVertex2f((j+1)*dx, i*dy);
+			glVertex2f((j+1)*dx, (i+1)*dy);
+			glVertex2f(j*dx, (i+1)*dy);
+		}
+	}
+	glEnd();
+}
+
+void SetBulb()
+{
+	float local_ambient[] = { .2, .2, .2, 1.0 };
+	float local_diffuse[] = { 1.0, 1.0, 1.0, 1.0 };
+	float local_specular[] = { 1.0, 1.0, 1.0, 1.0 };
+	float local_position[] = { .0, .0, .0, 1.0 };
+	float spot_direction[] = { .0, .0, -1.0 };
+
+	glLightfv(GL_LIGHT2, GL_AMBIENT, local_ambient);
+	glLightfv(GL_LIGHT2, GL_DIFFUSE, local_diffuse);
+	glLightfv(GL_LIGHT2, GL_SPECULAR, local_specular);
+	glLightfv(GL_LIGHT2, GL_POSITION, local_position);
+
+	glLightf(GL_LIGHT2, GL_SPOT_CUTOFF, 45.0);
+	glLightf(GL_LIGHT2, GL_SPOT_EXPONENT, 2.0);
+
+	glLightf(GL_LIGHT2, GL_CONSTANT_ATTENUATION, 1.5);
+	glLightf(GL_LIGHT2, GL_LINEAR_ATTENUATION, .5);
+	glLightf(GL_LIGHT2, GL_QUADRATIC_ATTENUATION, .2);
+
+	glEnable(GL_LIGHT2);
 }
 
 void SetWoodMaterial()
@@ -169,20 +218,38 @@ void GLRender::DrawScene(CDC* pDC)
 
 void GLRender::DrawBox(double a, double b, double c)
 {
-	GLfloat vertices[]= { -a/2, -b/2 ,c/2, 
-		a/2, -b/2 ,c/2, 
-		a/2, b/2 ,c/2, 
-		-a/2, b/2 ,c/2, 
-		-a/2, -b/2 ,-c/2, 
-		a/2, -b/2 ,-c/2,
-		a/2, b/2 ,-c/2,
-		-a/2, b/2 ,-c/2	};
+	glBegin(GL_QUADS);
+	glVertex3f(-a / 2, -b / 2, c / 2);
+	glVertex3f(a / 2, -b / 2, c / 2);
+	glVertex3f(a / 2, b / 2, c / 2);
+	glVertex3f(-a / 2, b / 2, c / 2);
 
-	GLushort indices[]= { 0,1,2,3, 1,5,6,2, 7,6,5,4, 0,3,7,4, 7,3,2,6, 0,4,5,1	};
-	glVertexPointer(3, GL_FLOAT, 0, vertices);
-	glEnableClientState(GL_VERTEX_ARRAY);
-	glDrawElements(GL_QUADS, 24, GL_UNSIGNED_SHORT, indices);
-	glDisableClientState(GL_VERTEX_ARRAY);
+	glVertex3f(a / 2, b / 2, c / 2);
+	glVertex3f(a / 2, -b / 2, c / 2);
+	glVertex3f(a / 2, -b / 2, -c / 2);
+	glVertex3f(a / 2, b / 2, -c / 2);
+
+	glVertex3f(a / 2, b / 2, -c / 2);
+	glVertex3f(a / 2, -b / 2, -c / 2);
+	glVertex3f(-a / 2, -b / 2, -c / 2);
+	glVertex3f(-a / 2, b / 2, -c / 2);
+
+	glVertex3f(-a / 2, b / 2, -c / 2);
+	glVertex3f(-a / 2, -b / 2, -c / 2);
+	glVertex3f(-a / 2, -b / 2, c / 2);
+	glVertex3f(-a / 2, b / 2, c / 2);
+
+	glVertex3f(-a / 2, b / 2, c / 2);
+	glVertex3f(a / 2, b / 2, c / 2);
+	glVertex3f(a / 2, b / 2, -c / 2);
+	glVertex3f(-a / 2, b / 2, -c / 2);
+
+	glVertex3f(-a / 2, -b / 2, -c / 2);
+	glVertex3f(a / 2, -b / 2, -c / 2);
+	glVertex3f(a / 2, -b / 2, c / 2);
+	glVertex3f(-a / 2, -b / 2, c / 2);
+
+	glEnd();
 }
 
 void GLRender::DrawBox2(double a, double b, double c)
@@ -237,13 +304,7 @@ void GLRender::DrawTable()
 
 void GLRender::DrawWall(int a)
 {
-	glBegin(GL_QUADS);
-		glNormal3f(0.0, 0.0, 1.0);
-		glVertex3f(0, 0, 0);
-		glVertex3f(a, 0, 0);
-		glVertex3f(a, a, 0);
-		glVertex3f(0, a, 0);
-	glEnd();
+	DrawTiles(a, a, parts);
 }
 
 void GLRender::DrawWalls(int a)
@@ -346,6 +407,8 @@ void GLRender::DrawLampTop()
 	gluDeleteQuadric(ob);
 	glDisable(GL_CLIP_PLANE0);
 
+	SetBulb();
+	
 	glPopMatrix();
 
 	GLUquadricObj *sijalica;
@@ -354,7 +417,6 @@ void GLRender::DrawLampTop()
 	glPushMatrix();
 
 	glRotatef(glavaX, 1, 0, 0);
-	glRotatef(glavaY, 0, 1, 0);
 	SetBulbMaterial();
 	glTranslatef(0, .50, 0);
 	gluSphere(sijalica, .10, 30, 30);
@@ -380,29 +442,9 @@ void GLRender::SetLightModel()
 
 	glLightModeli(GL_LIGHT_MODEL_LOCAL_VIEWER, GL_FALSE);
 
-	// svetlo bele boje
-
-	float local_ambient[]  = {.2, .2, .2, 1.0};
-	float local_diffuse[] = {1.0, 1.0, 1.0, 1.0};
-	float local_specular[] = {1.0, 1.0, 1.0, 1.0};
-	float local_position[] = {.0, .0, 1.5, 2.5};
-
-	glLightfv(GL_LIGHT2, GL_AMBIENT, local_ambient);
-	glLightfv(GL_LIGHT2, GL_DIFFUSE, local_diffuse);
-	glLightfv(GL_LIGHT2, GL_SPECULAR, local_specular);
-
-	glLightf(GL_LIGHT2, GL_CONSTANT_ATTENUATION, 1.0);
-
-	glLightf(GL_LIGHT2, GL_SPOT_CUTOFF, 20.0);
-	glLightf(GL_LIGHT2, GL_SPOT_EXPONENT, 2.0);
-
-	glLightf(GL_LIGHT2, GL_LINEAR_ATTENUATION, .5);
-	glLightf(GL_LIGHT2, GL_CONSTANT_ATTENUATION, 1.0);
-
-	glLightfv(GL_LIGHT2, GL_POSITION, local_position);
+	// svetlo lampe bele boje
 
 	glEnable(GL_LIGHT1);
-	glEnable(GL_LIGHT2);
 	glEnable(GL_LIGHTING);
 }
 

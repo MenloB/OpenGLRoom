@@ -15,7 +15,7 @@ public:
 	int x, y, z;
 
 	//materijali
-
+	int parts;
 public:
 
 	GLRender(void);

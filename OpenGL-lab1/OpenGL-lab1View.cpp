@@ -261,6 +261,12 @@ void COpenGLlab1View::OnKeyDown(UINT nChar, UINT nRepCnt, UINT nFlags)
 	else if (nChar == 'M') {
 		m_glRenderer.glavaY -= 5;
 	}
+	else if (nChar == 'V') {
+		m_glRenderer.parts += 1;
+	}
+	else if (nChar == 'F') {
+		m_glRenderer.parts -= 1;
+	}
 
 
 	Invalidate(true);
